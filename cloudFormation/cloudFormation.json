@@ -1,0 +1,146 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+        "distd4e7qrn4dx9m0cloudfrontnet": {
+            "Type": "AWS::CloudFront::Distribution",
+            "Properties": {
+                "DistributionConfig": {
+                    "Enabled": true,
+                    "PriceClass": "PriceClass_All",
+                    "DefaultCacheBehavior": {
+                        "TargetOriginId": "S3-pava2bkt",
+                        "ViewerProtocolPolicy": "allow-all",
+                        "MinTTL": 0,
+                        "AllowedMethods": ["HEAD", "GET"],
+                        "CachedMethods": ["HEAD", "GET"],
+                        "ForwardedValues": {
+                            "Cookies": {
+                                "Forward": "none"
+                            }
+                        }
+                    },
+                    "Origins": [{
+                        "DomainName": "pava2bkt.s3.amazonaws.com",
+                        "Id": "S3-pava2bkt",
+                        "S3OriginConfig": {
+                            "OriginAccessIdentity": "origin-access-identity/cloudfront/E2IWSH4TRA9ULV"
+                        }
+                    }],
+                    "Restrictions": {
+                        "GeoRestriction": {
+                            "RestrictionType": "blacklist",
+                            "Locations": ["CU"]
+                        }
+                    },
+                    "ViewerCertificate": {
+                        "CloudFrontDefaultCertificate": "true",
+                        "MinimumProtocolVersion": "TLSv1"
+                    }
+                }
+            }
+        },
+        "s3pava2bkt": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "AccessControl": "Private",
+                "LifecycleConfiguration": {
+                    "Rules": [{
+                        "ExpirationInDays": "732",
+                        "Id": "pavalifecycle",
+                        "Status": "Enabled",
+                        "Transition": {
+                            "StorageClass": "Glacier",
+                            "TransitionInDays": "75"
+                        }
+                    }]
+                },
+                "VersioningConfiguration": {
+                    "Status": "Enabled"
+                }
+            }
+        },
+        "s3policypava2bkt": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+                "Bucket": {
+                    "Ref": "s3pava2bkt"
+                },
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Id": "AuthroizedUsersBucketPolicy",
+                    "Statement": [{
+                        "Sid": "ListAllAndGetLocation",
+                        "Effect": "Allow",
+                        "Principal": {
+                            "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+                        },
+                        "Action": "s3:GetBucketLocation",
+                        "Resource": {
+                            "Fn::Join": ["", ["arn:aws:s3:::", "pava", "2bkt"]]
+                        }
+                    }, {
+                        "Sid": "ListRootAndChild",
+                        "Effect": "Allow",
+                        "Principal": {
+                            "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+                        },
+                        "Action": "s3:ListBucket",
+                        "Resource": {
+                            "Fn::Join": ["", ["arn:aws:s3:::", "pava", "2bkt"]]
+                        },
+                        "Condition": {
+                            "StringEquals": {
+                                "s3:delimiter": "/",
+                                "s3:prefix": ["", "test1/"]
+                            }
+                        }
+                    }, {
+                        "Sid": "DenyAccessToOtherBuckets",
+                        "Effect": "Deny",
+                        "Principal": {
+                            "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+                        },
+                        "Action": "s3:ListBucket",
+                        "Resource": {
+                            "Fn::Join": ["", ["arn:aws:s3:::", "pava", "2bkt"]]
+                        },
+                        "Condition": {
+                            "StringNotLike": {
+                                "s3:prefix": ["test1/*", ""]
+                            },
+                            "Null": {
+                                "s3:prefix": "False"
+                            }
+                        }
+                    }, {
+                        "Sid": "ListAllChildren",
+                        "Effect": "Allow",
+                        "Principal": {
+                            "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+                        },
+                        "Action": "s3:ListBucket",
+                        "Resource": {
+                            "Fn::Join": ["", ["arn:aws:s3:::", "pava", "2bkt"]]
+                        },
+                        "Condition": {
+                            "StringLike": {
+                                "s3:prefix": "test1/*"
+                            }
+                        }
+                    }, {
+                        "Sid": "AllowGetAndPut",
+                        "Effect": "Allow",
+                        "Principal": {
+                            "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+                        },
+                        "Action": ["s3:PutObject", "s3:GetObject"],
+                        "Resource": {
+                            "Fn::Join": ["", ["arn:aws:s3:::", "pava", "2bkt/test1/*"]]
+                        }
+                    }]
+                }
+            }
+        }
+    },
+    "Description": "test-2"
+}
