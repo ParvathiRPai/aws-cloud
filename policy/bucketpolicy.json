@@ -1,0 +1,79 @@
+{
+    "Version": "2012-10-17",
+    "Id": "AuthroizedUsersBucketPolicy",
+    "Statement": [
+        {
+            "Sid": "ListAllAndGetLocation",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+            },
+            "Action": "s3:GetBucketLocation",
+            "Resource": "arn:aws:s3:::pava2bkt"
+        },
+        {
+            "Sid": "ListRootAndChild",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::pava2bkt",
+            "Condition": {
+                "StringEquals": {
+                    "s3:prefix": [
+                        "",
+                        "test1/"
+                    ],
+                    "s3:delimiter": "/"
+                }
+            }
+        },
+        {
+            "Sid": "DenyAccessToOtherBuckets",
+            "Effect": "Deny",
+            "Principal": {
+                "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::pava2bkt",
+            "Condition": {
+                "StringNotLike": {
+                    "s3:prefix": [
+                        "test1/*",
+                        ""
+                    ]
+                },
+                "Null": {
+                    "s3:prefix": "False"
+                }
+            }
+        },
+        {
+            "Sid": "ListAllChildren",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::pava2bkt",
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": "test1/*"
+                }
+            }
+        },
+        {
+            "Sid": "AllowGetAndPut",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::192075818472:user/pavaTestUser3"
+            },
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::pava2bkt/test1/*"
+        }
+    ]
+}
